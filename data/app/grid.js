@@ -41,10 +41,13 @@ YTG.grid = (function (YTG, grid) {
         return grid.hidden.includes(id);
     }
 
+    grid.removeVideo = (v) => {
+        v.parentElement.parentElement.parentElement.remove();
+    }
+
     grid.jj = () => {
+        console.log("jj processing");
         const today = document.querySelector("#title");
-        const textnode = document.createTextNode(" test ");
-        today.appendChild(textnode);
         if(grid.settings.hideWatched){
             const to_remove = grid.allWatched()
             // remove the hidden ones too 
@@ -56,7 +59,7 @@ YTG.grid = (function (YTG, grid) {
                 }
             );
             to_remove.forEach( (v) => {
-                try{ v.parentElement.parentElement.remove(); }
+                try{ grid.removeVideo(v); }
                 catch(e){ console.log(v, e); }
             });
 
@@ -64,12 +67,17 @@ YTG.grid = (function (YTG, grid) {
         // add buttons to others
         grid.notWatched().forEach( (v) => {
             const d = v.parentElement.parentElement;
+            try{
+                const lastChildText = d.children[d.children.length-1].children[0].text;
+                if(lastChildText == "hide"){ return; }
+            }catch(e){}
+
             const hidelinktext = document.createTextNode("hide");
             const hidediv = document.createElement("div");
             const hidelink = document.createElement("a");
             hidelink.onclick = () => {
                 grid.addHidden(videoToId(v));
-                v.parentElement.parentElement.remove();
+                grid.removeVideo(v);
             };
             hidelink.appendChild(hidelinktext);
             hidediv.appendChild(hidelink);
@@ -80,7 +88,10 @@ YTG.grid = (function (YTG, grid) {
     grid.setup = function (isClassicGridMode) {
         grid.videoCount = grid.allVideos().length;
         grid.loadHidden();
-        sleep(2000).then(grid.jj);
+        sleep(2000).then(() => {
+            grid.jj();
+            setInterval(grid.jj, 10000);
+        });
     };
 
     grid.isGrid = function()
